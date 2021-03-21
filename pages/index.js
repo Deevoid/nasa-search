@@ -1,65 +1,79 @@
-import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+import Head from "next/head";
+import { useEffect, useRef, useState } from "react";
+import getApod from "../api/apod";
+import searchData from "../api/search";
+import HomePage from "../components/HomePage/HomePage";
+import Navbar from "../components/Navbar";
+import SearchBar from "../components/SearchBar";
+import SearchPage from "../components/SearchPage";
+import debounce from "../utils/debounce.js"
+import keywordExtractor from "../utils/keywordExtractor";
 
-export default function Home() {
-  return (
-    <div className={styles.container}>
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+const key = process.env.NEXT_PUBLIC_API_KEY;
 
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
+export default function Home(props) {
+	const [searchList, setSearchList] = useState({});
+	const [query, setQuery] = useState("");
+	const [error, setError] = useState(false);
 
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
+	const { apod } = props;
+	async function debouncehandleSearch(value) {
+		if (value) {
+			setQuery(value);
+			const search = await searchData(value);
+      console.log(search)
+			if (
+				search &&
+				search.collection &&
+				Object.keys(search.collection).length > 0 &&
+				search.collection.items.length > 0
+			) {
+				setError(false);
+				setSearchList(search.collection);
+			} else setError(true);
+		} else {
+			setError(false);
+			setSearchList({});
+		}
+	}
 
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
+  useEffect(() => {
+    keywordExtractor(searchList.items);
 
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
+  }, [searchList])
 
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
+  const handleSearch = debounce(debouncehandleSearch, 250)
 
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
+	return (
+		<>
+			<Head>
+				<title>Nasa media search</title>
+				<link rel="icon" href="/favicon.ico" />
+			</Head>
+			<div className="head  mt-4 flex flex-col md:flex-row flex-wrap items-center justify-center md:justify-between">
+				<p className="text-2xl mb-4 md:mb-0 font-medium ">
+					{Object.keys(searchList).length <= 0 ? (
+						apod.title
+					) : (
+						<span>
+							Search results for <span className="text-purple-600 underline">{query}</span>
+						</span>
+					)}
+				</p>
+				<SearchBar error={error} handleSearch={handleSearch} />
+			</div>
+			{searchList && Object.keys(searchList).length > 0 ? (
+				searchList && <SearchPage data={searchList} />
+			) : (
+				<HomePage apod={apod} />
+			)}
+		</>
+	);
+}
 
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
-    </div>
-  )
+export async function getServerSideProps(context) {
+	const apod = await getApod();
+	return {
+		props: { apod }, // will be passed to the page component as props
+	};
 }
