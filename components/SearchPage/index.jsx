@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import SearchCard from "../SearchCard";
 import Pagination from "react-js-pagination";
-import Spinner from "../spinner";
+import Spinner from "../Spinner";
 
 export default function SearchPage(props) {
 	const { data } = props;
