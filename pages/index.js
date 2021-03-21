@@ -24,7 +24,6 @@ export default function Home(props) {
 			setQuery(value);
 			value = value.replace(/\s/g, "");
 			const search = await searchData(value);
-			console.log(search);
 			if (
 				search &&
 				search.collection &&
@@ -43,7 +42,6 @@ export default function Home(props) {
 	useEffect(() => {
 		const res = keywordExtractor(searchList.items);
 		setKeywords(res);
-		console.log(res);
 	}, [searchList]);
 
 	const handleSearch = debounce(debouncehandleSearch, 250);
