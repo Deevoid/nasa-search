@@ -19,7 +19,7 @@ export default function HomePage({apod}) {
 			<p className="desc text-left my-5 font-medium">
 				<span className="text-gray-400 font-normal">Copyright</span>{" "}
 				<span className="animate-pulse">©️</span>
-				&nbsp;{apod.copyright}
+				&nbsp;{apod.copyright || 'Data not available'}
 			</p>
     </div>
   )

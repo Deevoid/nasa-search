@@ -6,22 +6,25 @@ import HomePage from "../components/HomePage/HomePage";
 import Navbar from "../components/Navbar";
 import SearchBar from "../components/SearchBar";
 import SearchPage from "../components/SearchPage";
-import debounce from "../utils/debounce.js"
+import debounce from "../utils/debounce.js";
 import keywordExtractor from "../utils/keywordExtractor";
 
 const key = process.env.NEXT_PUBLIC_API_KEY;
 
 export default function Home(props) {
 	const [searchList, setSearchList] = useState({});
+	const [keywords, setKeywords] = useState([]);
 	const [query, setQuery] = useState("");
 	const [error, setError] = useState(false);
+	const ref = useRef();
 
 	const { apod } = props;
 	async function debouncehandleSearch(value) {
 		if (value) {
 			setQuery(value);
+			value = value.replace(/\s/g, "");
 			const search = await searchData(value);
-      console.log(search)
+			console.log(search);
 			if (
 				search &&
 				search.collection &&
@@ -37,12 +40,13 @@ export default function Home(props) {
 		}
 	}
 
-  useEffect(() => {
-    keywordExtractor(searchList.items);
+	useEffect(() => {
+		const res = keywordExtractor(searchList.items);
+		setKeywords(res);
+		console.log(res);
+	}, [searchList]);
 
-  }, [searchList])
-
-  const handleSearch = debounce(debouncehandleSearch, 250)
+	const handleSearch = debounce(debouncehandleSearch, 250);
 
 	return (
 		<>
@@ -50,7 +54,9 @@ export default function Home(props) {
 				<title>Nasa media search</title>
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
-			<div className="head  mt-4 flex flex-col md:flex-row flex-wrap items-center justify-center md:justify-between">
+			<div
+				ref={ref}
+				className="head  mt-4 flex flex-col md:flex-row flex-wrap items-center justify-center md:justify-between">
 				<p className="text-2xl mb-4 md:mb-0 font-medium ">
 					{Object.keys(searchList).length <= 0 ? (
 						apod.title
@@ -60,10 +66,30 @@ export default function Home(props) {
 						</span>
 					)}
 				</p>
-				<SearchBar error={error} handleSearch={handleSearch} />
+				<SearchBar query={query} error={error} handleSearch={handleSearch} />
 			</div>
 			{searchList && Object.keys(searchList).length > 0 ? (
-				searchList && <SearchPage data={searchList} />
+				searchList && (
+					<>
+						<SearchPage data={searchList} />
+						<div className="keywords my-5">
+							<p className="text-lg font-medium ">Related searches...</p>
+							{keywords &&
+								keywords.length > 0 &&
+								keywords.map((item) => (
+									<span
+										onClick={() => {
+											handleSearch(item);
+											ref.current.scrollIntoView({ behavior: "smooth" });
+										}}
+										className="cursor-pointer text-sm underline mr-2"
+										key={item}>
+										{item}
+									</span>
+								))}
+						</div>
+					</>
+				)
 			) : (
 				<HomePage apod={apod} />
 			)}

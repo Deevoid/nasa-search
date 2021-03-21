@@ -11,7 +11,7 @@ export default function keywordExtractor(arr) {
 		});
 		const map = allKeywords.reduce((acc, e) => acc.set(e, (acc.get(e) || 0) + 1), new Map());
 		const sortedMap = new Map([...map.entries()].sort((a, b) => b[1] - a[1]));
-		const relatedSearch = [...sortedMap.keys()].slice(0, 4);
-		console.log(relatedSearch);
+		const relatedSearch = [...sortedMap.keys()].slice(1, 5);
+    return relatedSearch;
 	}
 }
